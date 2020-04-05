@@ -65,12 +65,16 @@ def isPossibleStackBlockForFunc(block_func):
     if IS_MAC:
         codeRefs = filter(lambda x: TextSeg.getInstructionAtAddress(x).getInstructionString() == 'call', refsTo)
     else:
-        print '==============='
-        codeRefs = filter(lambda x: TextSeg.stringForType(TextSeg.getTypeAtAddress(x)) == 'procedure', refsTo);
+        codeRefs = filter(lambda x: TextSeg.stringForType(TextSeg.getTypeAtAddress(x)) == Segment.stringForType(Segment.TYPE_CODE), refsTo);
         codeRefs = filter(lambda x: TextSeg.getInstructionAtAddress(x).getInstructionString() == 'bl', codeRefs)
-        print '==============='
     if len(codeRefs) !=0 :
         return False
+        
+    # ref to block should be in text section
+    for addr in refsTo:
+        if not isInText(addr):
+            print '%x is not block because be ref from %x' % (block_func, addr)
+            return False
 
     # block func should be ref in only 1 function
     superFuncs = []
