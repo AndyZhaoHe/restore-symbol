@@ -65,7 +65,10 @@ def isPossibleStackBlockForFunc(block_func):
     if IS_MAC:
         codeRefs = filter(lambda x: TextSeg.getInstructionAtAddress(x).getInstructionString() == 'call', refsTo)
     else:
-        codeRefs = filter(lambda x: TextSeg.getInstructionAtAddress(x).getInstructionString() == 'bl', refsTo)
+        print '==============='
+        codeRefs = filter(lambda x: TextSeg.stringForType(TextSeg.getTypeAtAddress(x)) == 'procedure', refsTo);
+        codeRefs = filter(lambda x: TextSeg.getInstructionAtAddress(x).getInstructionString() == 'bl', codeRefs)
+        print '==============='
     if len(codeRefs) !=0 :
         return False
 
@@ -85,6 +88,7 @@ def isPossibleStackBlockForFunc(block_func):
 
 def superFuncForStackBlock(block_func):
     refsTo = TextSeg.getReferencesOfAddress(block_func)
+    refsTo = filter(lambda x: TextSeg.stringForType(TextSeg.getTypeAtAddress(x)) == 'procedure', refsTo);
     superFuncs = [TextSeg.getProcedureAtAddress(x).getEntryPoint() for x in refsTo]
     superFuncs = list (set (superFuncs))
     if len(superFuncs) != 1:
@@ -154,14 +158,13 @@ def main():
 
         AllGlobalBlockMap[func] = info
 
-#find all possible Stack Block 
+#find all possible Stack Block
     allPossibleStackBlockFunc = []
     allRefToBlock=[]
     StackBlockAddr = doc.getAddressForName("__NSConcreteStackBlock")
     # if IS32BIT:
-    allRefToBlock = DataSeg.getReferencesOfAddress(SymbolSeg.getReferencesOfAddress(StackBlockAddr)[0])
+    allRefToBlock = SymbolSeg.getReferencesOfAddress(StackBlockAddr)
     allRefToBlock = filter(lambda x:isInText(x), allRefToBlock)
-
     for addr in allRefToBlock:
         proc = TextSeg.getProcedureAtAddress(addr)
         if not proc:
@@ -178,7 +181,7 @@ def main():
     allPossibleStackBlockFunc = filter(lambda x:isPossibleStackBlockForFunc(x) , allPossibleStackBlockFunc )
 
 
-#process all Global Block 
+#process all Global Block
     for block_func in AllGlobalBlockMap:
         block_name = findBlockName(block_func)
         resultDict[block_func] =  block_name
@@ -212,3 +215,4 @@ try:
     log('Done!')
 except Exception as e:
     log('-----------------\n\033[1;31mException Occured For:\033[0m\n' + str(e) + '\nStack Info:\n' +  traceback.format_exc() + '\n------------------')
+
